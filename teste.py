@@ -1,61 +1,91 @@
 import chromedriver_autoinstaller as chromedriver
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.support.ui import Select
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from bs4 import BeautifulSoup
 import time
 import getpass
 import pandas as pd
 
+
 chromedriver.install()
 
 username = getpass.getuser()
 options = Options()
+options.headless = True
+options.add_argument('window-size=1920x1080')
+
 web = f'''https://br.betano.com/live/'''
 username = getpass.getuser()
 driver = webdriver.Chrome(options=options)
 driver.get(web)
 
-time.sleep(10)
-inspect = '/html/body/div[1]/div/section[2]/div[5]/div[2]/div/div/div[3]/div'
+time.sleep(5)
+inspect = '/html/body/div[1]/div/section[2]/div[5]/div[2]/div/div/div[3]/div/div'
 element = driver.find_element('xpath', f'{inspect}')
 
 html_element = element.get_attribute('outerHTML')
 
 soup = BeautifulSoup(html_element, 'html.parser')
 
-header = soup.find("div", {
-                   "class": "live-events-league__header live-events-league__header--clickable"})
+header = []
+tempo = []
+participante1 = []
+participante2 = []
+resultado1 = []
+resultado2 = []
+odd1 = []
+odd2 = []
+odd3 = []
 
-body = soup.find_all("div", {
-                     "class": "live-events-event-row__container live-event live-events-event-row__container--row"})
-
-# with open("./text.html", "w") as f:
-#     f.write(str(body))
-
-for data in body:
-    participantes = data.find_all(
-        "span", {"class": "live-event__participants__participant-name"})
-    print(participantes[0].text)
-    print(participantes[1].text)
+um = 0
+dois = 0
+tres = 0
 
 
-# cont = 0
-# for respostas in body:
-#     print("*"*30)
-#     print(respostas.find_all("div", {
-#         "class": "live-events-league__header live-events-league__header--clickable"}))
-#     print("*"*30)
+for i in range(1000):
+  
+    try:
+        headers = soup.find_all("div", {
+                    "class": "live-events-league__header live-events-league__header--clickable"})
+        
+        content = str(headers[i].contents[1].text)
+        content = content[3:len(content)-3]
+        final = int(content[-2:-1])
+        for i in range(final):
+            header.append(content)
+    except:
+        pass
 
-# participants = body.find_all("span",{"class":"live-event__participants__participant-name"})[0]
-# odds = body.find_all("span",{"class":"selections__selection__odd"})
-# print(odds[0].text)
-# print(odds[1].text)
-# print(odds[2].text)
+um = 0
+dois = 0
+tres = 0
 
-# result = body.find_all("span",{"class":"live-event__scores__score__text"})
-# print(result[0].text)
-# print(result[1].text)
+for i in range(1000):
+
+    try:
+        participantes = soup.find_all("span", {"class": "live-event__participants__participant-name"})
+        participante1.append(participantes[dois].text)
+        participante2.append(participantes[dois+1].text)
+        
+        result = soup.find_all("span", {"class":"live-event__scores__score__text"})
+        resultado1.append(result[dois].text)
+        resultado2.append(result[dois+1].text)  
+        
+        odds = soup.find_all("span",{"class":"selections__selection__odd"})
+        odd1.append(odds[tres].text)
+        odd2.append(odds[tres+1].text)
+        odd3.append(odds[tres+2].text)
+    except:
+        pass
+
+
+    um = um + 1
+    dois = dois + 2
+    tres = tres + 3
+
+
+df = pd.DataFrame(list(zip(header, participante1,participante2, resultado1,resultado2,odd1,odd2,odd3)), columns=["liga","time1","time2","placartime1","placartime2","odd1","odd2","odd3"]).replace("\n","", regex=True)
+print(df)
+
+
